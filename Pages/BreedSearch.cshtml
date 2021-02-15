@@ -1,0 +1,47 @@
+﻿@page
+@model PetWalkSite.Pages.BreedSearchModel
+@{
+}
+@using System.Data
+@using System.Data.SqlClient
+
+@{
+    DataTable table = new DataTable();
+    using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+    {
+        string searchQuery = "SELECT * " +
+                    "FROM breed ";
+        SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+        myConn.Open();
+        table.Load(displayCommand.ExecuteReader());
+        myConn.Close();
+    } // using
+}
+
+<h4>Breed Search Portal</h4>
+@if (@Model.alertMessage != null)
+{
+    <script>alert("@Model.alertMessage");</script>
+}
+
+<div class="formItem">
+    <form method="post" asp-page-handler="FindBreed">
+        <span class="infoText">select breed</span>
+        <select name="search">
+            <option value="0" selected>-- Select --</option>
+            @foreach (DataRow row in table.Rows)
+            {
+                <option name="breed" value="@row["name"]">@row["name"]</option>
+            }
+        </select>
+        <input type="submit" value="Find Breed" />
+    </form>
+</div>
+
+<div class="formItem">
+    <form method="post" asp-page-handler="UpdateBreed">
+        <input type="hidden" name="breed_id" value="@Model.breedId" />
+        <input type="text" name="name" value="@Model.breedName" /><br />
+        <input type="submit" value="Update" />
+    </form>
+</div>

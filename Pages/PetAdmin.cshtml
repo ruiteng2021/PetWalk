@@ -1,0 +1,105 @@
+﻿@page
+@model PetWalkSite.Pages.PetAdminModel
+@{
+}
+@using System.Data
+@using System.Data.SqlClient
+
+@{
+    DataTable table = new DataTable();
+    DataTable breedTable = new DataTable();
+    DataTable clientTable = new DataTable();
+
+    using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+    {
+        string searchQuery = "SELECT * FROM pet";
+        SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+        myConn.Open();
+        table.Load(displayCommand.ExecuteReader());
+        myConn.Close();
+    } // using
+    using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+    {
+        string searchQuery = "SELECT * FROM breed";
+        SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+        myConn.Open();
+        breedTable.Load(displayCommand.ExecuteReader());
+        myConn.Close();
+    } // using
+    using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+    {
+        string searchQuery = "SELECT * FROM client";
+        SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+        myConn.Open();
+        clientTable.Load(displayCommand.ExecuteReader());
+        myConn.Close();
+    } // using
+}
+
+
+<h4>Pet Portal</h4>
+@if (@Model.alertMessage != null)
+{
+    <script>alert("@Model.alertMessage");</script>
+}
+<div class="formItem">
+    <form method="post" asp-page-handler="AddBreed">
+
+        <input required type="text" name="breedName" placeholder="add breed name" /><br />
+        <input type="submit" value="Add Breed" />
+
+    </form>
+</div>
+
+<div class="formItem">
+    <form method="post" asp-page-handler="AddPet">
+
+        <input required type="text" name="name" placeholder="enter pet name" /><br />
+        <input required ="text" name="age" placeholder="enter pet age" /><br />
+        <select name="breed">
+            <option value=" " selected>Select Breed...</option>
+            @foreach (DataRow rowBreed in breedTable.Rows)
+            {
+                <option>@rowBreed["name"]</option>
+            }
+        </select><br />
+        <select name="client">
+            <option value="0" selected>Select Client...</option>
+            @foreach (DataRow rowClient in clientTable.Rows)
+            {
+                <option>@rowClient["name"]</option>
+            }
+        </select><br />
+        <input type="hidden" name="clientID" value="1" /><br />
+        <textarea required placeholder="add some notes for your pets" name="notes" rows="3" cols="30" maxlength="500" style="margin-top: -20px; width: 100%;"></textarea><br />
+        <input type="submit" value="Save Pet" />
+    </form>
+</div>
+
+<div class="formItemTable">
+    <h5>Pets Summery</h5>
+    <table border="1" class="tableLayout">
+        <tr>
+            <th>Pet ID</th>
+            <th>Name</th>
+            <th>Breed ID</th>
+            <th>Age</th>
+            <th>Notes</th>
+            <th>Client ID</th>
+            <th>Status</th>
+        </tr>
+        @foreach (DataRow row in table.Rows)
+        {
+            <tr>
+                <td>@row["petID"]</td>
+                <td>@row["name"]</td>
+                <td>@row["breedID"]</td>
+                <td>@row["age"]</td>
+                <td>@row["notes"]</td>
+                <td>@row["clientID"]</td>
+                <td>@row["status"]</td>
+            </tr>
+        }
+    </table>
+
+</div>

@@ -1,0 +1,158 @@
+﻿@page
+@model PetWalkSite.Pages.EmployeeAdminModel
+@{
+}
+@using System.Data
+@using System.Data.SqlClient
+
+@{
+    DataTable table = new DataTable();
+    using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+    {
+        string searchQuery = "SELECT * FROM volunteer";
+        SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+        myConn.Open();
+
+        table.Load(displayCommand.ExecuteReader());
+
+    } // using
+}
+
+<h4>Employee Portal</h4>
+
+@if (@Model.alertMessage != null)
+{
+    <script>alert("@Model.alertMessage");</script>
+}
+
+<div class="formItem">
+
+    <form method="post" asp-page-handler="AddEmployees">
+        <input required type="text" name="name" placeholder="enter name" /><br />
+        <input required type="number" name="age" placeholder="enter age" /><br />
+        <input required type="text" name="address" placeholder="enter address" /><br />
+        <input required type="text" name="bio" placeholder="enter bio" /><br />
+        <input type="submit" value="Add Employees" />
+    </form>
+</div>
+<div class="formItemTable">
+    <h5>Volunteer Summary</h5>
+    <table border="1" class="tableLayout">
+        <tr>
+            <th>Volunteer ID</th>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Address</th>
+            <th>Bio</th>
+            <th>Status</th>
+        </tr>
+        @foreach (DataRow row in table.Rows)
+        {
+            <tr>
+                <td>@row["volunteerID"]</td>
+                <td>@row["name"]</td>
+                <td>@row["age"]</td>
+                <td>@row["address"]</td>
+                <td>@row["bio"]</td>
+                <th>@row["status"]</th>
+            </tr>
+        }
+    </table>
+</div>
+
+@{
+    DataTable availTable = new DataTable();
+    using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+    {
+        string searchQuery = "SELECT * FROM availability ORDER BY day ASC";
+        SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+        myConn.Open();
+        availTable.Load(displayCommand.ExecuteReader());
+        myConn.Close();
+    } // using
+
+    // find volunteer Name  from available table and prepare for volunteer availability list display
+    List<string> volNames = new List<string>();
+    @foreach (DataRow row in availTable.Rows)
+    {
+        @if ((int)@row["volunteerID"] != 0)
+        {
+            using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+            {
+                string searchQuery = "SELECT name FROM volunteer WHERE volunteerID = " + @row["volunteerID"];
+                SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+                myConn.Open();
+                SqlDataReader reader = displayCommand.ExecuteReader();
+                reader.Read();
+                volNames.Add((string)reader["name"]);
+                myConn.Close();
+            } // using
+        }
+    }
+}
+
+
+<div class="formItem" style="height: 325px;">
+    <form method="post" asp-page-handler="AddHours">
+        <div id="hoursLeftSide">
+            <span class="infoText">
+                *Hold ctrl-key to select multiple.
+            </span>
+            <select id="weekdays" name="days" multiple>
+                <option name="day" value="Monday">Monday</option>
+                <option name="day" value="Tuesday">Tuesday</option>
+                <option name="day" value="Wednesday">Wednesday</option>
+                <option name="day" value="Thursday">Thursday</option>
+                <option name="day" value="Friday">Friday</option>
+                <option name="day" value="Saturday">Saturday</option>
+                <option name="day" value="Sunday">Sunday</option>
+            </select>
+        </div>
+        <div id="hoursRightSide">
+            <span class="infoText">
+                *Use 24hr format. (example 6pm = 18)
+            </span>
+            <input type="text" name="start1" placeholder="start" /><input type="text" name="end1" placeholder="end" /><br />
+            <input type="text" name="start2" placeholder="start" /><input type="text" name="end2" placeholder="end" /><br />
+            <input type="text" name="start3" placeholder="start" /><input type="text" name="end3" placeholder="end" /><br />
+            <input type="text" name="start4" placeholder="start" /><input type="text" name="end4" placeholder="end" /><br />
+            <input type="submit" value="Add Time" />
+        </div>
+
+        <span class="infoText">select volunteer</span>
+        <select name="volunteer">
+            @foreach (DataRow row in table.Rows)
+            {
+                <option name="volId" value="@row["volunteerID"]">@row["name"]</option>
+            }
+        </select>
+
+    </form>
+</div>
+
+<div class="formItemTable">
+    <h5>Volunteer Availability</h5>
+    <table border="1" class="tableLayout">
+        <tr>
+            <th>Availability ID</th>
+            <th>Day</th>
+            <th>Start Hour</th>
+            <th>End Hour</th>
+            <th>Volunteer Name</th>
+        </tr>
+        @{
+            int s = 0;
+            @foreach (DataRow row in availTable.Rows)
+            {
+                <tr>
+                    <td>@row["availableID"]</td>
+                    <td>@row["day"]</td>
+                    <td>@row["starthour"]</td>
+                    <td>@row["endhour"]</td>
+                    <td>@volNames[s++]</td>
+                </tr>
+            }
+        }
+    </table>
+
+</div>

@@ -1,0 +1,49 @@
+﻿@page
+@model PetWalkSite.Pages.PetSearchModel
+@{
+}
+@using System.Data
+@using System.Data.SqlClient
+
+@{
+    DataTable table = new DataTable();
+    using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+    {
+        string searchQuery = "SELECT * " +
+                    "FROM pet ";
+        SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+        myConn.Open();
+        table.Load(displayCommand.ExecuteReader());
+        myConn.Close();
+    } // using
+}
+
+<h4>Pet Search Portal</h4>
+@if (@Model.alertMessage != null)
+{
+    <script>alert("@Model.alertMessage");</script>
+}
+
+<div class="formItem">
+    <form method="post" asp-page-handler="FindPet">
+        <span class="infoText">select pet</span>
+        <select name="search">
+            <option value="0" selected>-- Select --</option>
+            @foreach (DataRow row in table.Rows)
+            {
+                <option name="pet" value="@row["name"]">@row["name"]</option>
+            }
+        </select>
+        <input type="submit" value="Find Pet" />
+    </form>
+</div>
+
+<div class="formItem">
+    <form method="post" asp-page-handler="UpdatePet">
+        <input type="hidden" name="pet_id" value="@Model.petId" />
+        <input type="text" name="age" placeholder="age" value="@Model.age" /><br />
+        <input type="text" name="name" placeholder="pet name" value="@Model.name" /><br />
+        <input type="text" name="note" placeholder="note" value="@Model.note" /><br />
+        <input type="submit" value="Update" />
+    </form>
+</div>

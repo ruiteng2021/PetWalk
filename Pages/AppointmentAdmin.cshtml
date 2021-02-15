@@ -1,0 +1,142 @@
+﻿@page
+@model PetWalkSite.Pages.AppointmentAdminModel
+@{
+}
+@using System.Data
+@using System.Data.SqlClient
+
+@{
+    DataTable table = new DataTable();
+    using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+    {
+        string searchQuery = "SELECT * FROM pet";
+        SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+        myConn.Open();
+        table.Load(displayCommand.ExecuteReader());
+        myConn.Close();
+    } // using
+}
+
+
+<h4>Appointment Portal</h4>
+@if (@Model.alertMessage != null)
+{
+    <script>alert("@Model.alertMessage");</script>
+}
+<div class="formItem">
+    <form method="post" asp-page-handler="BookAppointment">
+        <div id="hoursLeftSide">
+            <span class="infoText">Book for days:</span>
+            <input required type="date" name="day" id="weekdays2">
+        </div>
+        <div id="hoursRightSide">
+            <span class="infoText">select your pets</span>
+            <select name="pet" required>
+                @foreach (DataRow row in table.Rows)
+                {
+                    <option name="pets" value="@row["name"]">@row["name"]</option>
+                }
+                <option value="" selected disabled hidden>-- select --</option>
+            </select>
+        </div>
+        <br><br>
+        <div>
+            @if (@Model.names.Count > 0)
+            {
+                @for (int j = 0; j < @Model.nameGroup.Count; j++)
+                {
+                    <p id="nameList">@Model.nameGroup[j]: </p>
+                    <select name="timeTable" id="timeTable" required>
+                        @for (int i = 0; i < @Model.names.Count; i++)
+                        {
+                            if (@Model.names[i] == @Model.nameGroup[j])
+                            {
+                                <option>@Model.startHours[i] - @Model.endHours[i] @Model.days[i] @Model.nameGroup[j]</option>
+                            }
+                        }
+                        <option value="" selected disabled hidden>-- select --</option>
+                    </select>
+                }
+            }
+        </div>
+        <input type="submit" value="Book Appointment" />
+    </form>
+</div>
+
+@{
+    DataTable bookTable = new DataTable();
+    using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+    {
+        string searchQuery = "SELECT appointmentID, petID, DATENAME(weekday, dateBooked) AS dateBooked, " +
+                    "appointmentDate, volunteerID, duration FROM appointment ORDER BY petID";
+        SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+        myConn.Open();
+
+        bookTable.Load(displayCommand.ExecuteReader());
+        myConn.Close();
+    } // using
+
+    List<string> petNames = new List<string>();
+    @foreach (DataRow row in bookTable.Rows)
+    {
+        @if ((int)@row["petID"] != 0)
+        {
+            using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+            {
+                string searchQuery = "SELECT name FROM pet WHERE petID = " + @row["petID"];
+                SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+                myConn.Open();
+                SqlDataReader reader = displayCommand.ExecuteReader();
+                reader.Read();
+                petNames.Add((string)reader["name"]);
+                myConn.Close();
+            } // using
+        }
+    }
+    List<string> volNames = new List<string>();
+    @foreach (DataRow row in bookTable.Rows)
+    {
+        @if ((int)@row["volunteerID"] != 0)
+        {
+            using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+            {
+                string searchQuery = "SELECT name FROM volunteer WHERE volunteerID = " + @row["volunteerID"];
+                SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+                myConn.Open();
+                SqlDataReader reader = displayCommand.ExecuteReader();
+                reader.Read();
+                volNames.Add((string)reader["name"]);
+                myConn.Close();
+            } // using
+        }
+    }
+}
+
+<div class="formItemTable">
+    <h5>Appointment Table</h5>
+    <table border="1" class="tableLayout">
+        <tr>
+            <th>Availability ID</th>
+            <th>Pet Name</th>
+            <th>Date Booked</th>
+            <th>Appointment Date</th>
+            <th>Volunteer Name</th>
+            <th>Duration(Hour)</th>
+        </tr>
+        @{
+            int h = 0;
+            int s = 0;
+            @foreach (DataRow row in bookTable.Rows)
+            {
+                <tr>
+                    <td>@row["appointmentID"]</td>
+                    <td>@petNames[h++]</td>
+                    <td>@row["dateBooked"]</td>
+                    <td>@row["appointmentDate"]</td>
+                    <td>@volNames[s++]</td>
+                    <td>@row["duration"]</td>
+                </tr>
+            }
+        }
+    </table>
+</div>

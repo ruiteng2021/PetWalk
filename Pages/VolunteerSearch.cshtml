@@ -1,0 +1,49 @@
+﻿@page
+@model PetWalkSite.Pages.VolunteerSearchModel
+@{
+}
+@using System.Data
+@using System.Data.SqlClient
+
+@{
+    DataTable table = new DataTable();
+    using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+    {
+        string searchQuery = "SELECT * " +
+                    "FROM volunteer";
+        SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+        myConn.Open();
+        table.Load(displayCommand.ExecuteReader());
+        myConn.Close();
+    } // using
+}
+<h4>Volunteer Search Portal</h4>
+@if (@Model.alertMessage != null)
+{
+    <script>alert("@Model.alertMessage");</script>
+}
+
+<div class="formItem">
+    <form method="post" asp-page-handler="FindVolunteer">
+        <span class="infoText">select volunteer</span>
+        <select name="search">
+            <option value="0" selected>-- Select --</option>
+            @foreach (DataRow row in table.Rows)
+            {
+                <option name="pet" value="@row["name"]">@row["name"]</option>
+            }
+        </select>
+        <input type="submit" value="Find Volunteer" />
+    </form>
+</div>
+
+<div class="formItem">
+    <form method="post" asp-page-handler="UpdateVolunteer">
+        <input type="hidden" name="volunteer_id" value="@Model.volunteerId" />
+        <input type="text" name="age" placeholder="age" value="@Model.age" /><br />
+        <input type="text" name="name" placeholder="name" value="@Model.name" /><br />
+        <input type="text" name="bio" placeholder="bio" value="@Model.bio" /><br />
+        <input type="text" name="address" placeholder="address" value="@Model.address" /><br />
+        <input type="submit" value="Update" />
+    </form>
+</div>

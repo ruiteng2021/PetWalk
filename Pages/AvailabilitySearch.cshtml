@@ -1,0 +1,103 @@
+﻿@page
+@model PetWalkSite.Pages.AvailabilitySearchModel
+@{
+}
+@using System.Data
+@using System.Data.SqlClient
+@{
+    DataTable table = new DataTable();
+    using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+    {
+        string searchQuery = "SELECT VT.name, VT.volunteerID " +
+                    "FROM availability " +
+                    "JOIN volunteer AS VT " +
+                    "ON availability.volunteerID = VT.volunteerID " +
+                    "GROUP BY VT.name, VT.volunteerID";
+        SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+        myConn.Open();
+        table.Load(displayCommand.ExecuteReader());
+        myConn.Close();
+    } // using
+}
+
+<h4>Availability Search Portal</h4>
+
+@if (@Model.alertMessage != null)
+{
+    <script>alert("@Model.alertMessage");</script>
+}
+
+<div class="formItem">
+    <form method="post" asp-page-handler="FindAvailability">
+        <span class="infoText">select volunteer</span>
+        <select name="volunteer">
+            <option value="0" selected>-- Select --</option>
+            @foreach (DataRow row in table.Rows)
+            {
+                <option name="volId" value="@row["name"]">@row["name"]</option>
+            }
+        </select>
+        <input type="submit" value="Find Volunteer Availability " />
+    </form>
+</div>
+
+<div class="formItemTable">
+    <form method="post" asp-page-handler="UpdateAvailability">
+        <h5>Appointment Table</h5>
+        <table border="1" class="tableLayout">
+            <tr>
+                <th>Availability ID</th>
+                <th>Week Day</th>
+                <th>Start Hour</th>
+                <th>End Hour</th>
+                <th>Volunteer Name</th>
+                <th>Volunteer ID</th>
+                <th style="width:10%">Delete</th>
+            </tr>
+            @{
+                if (@Model.table != null)
+                {
+                    foreach (DataRow @row in @Model.table.Rows)
+                    {
+                        <tr>
+                            <td>
+                                <select name="available_id" style="border: 0">
+                                    <option value="0" selected>-- Select --</option>
+                                    <option>@row["availableID"]</option>
+                                </select>
+                            </td>
+                            <td>
+                                @row["day"] <br>
+                                <select name="week_days" style="border: 0">
+                                    <option value="0" selected>-- Select --</option>
+                                    <option name="day" value="Monday">Monday</option>
+                                    <option name="day" value="Tuesday">Tuesday</option>
+                                    <option name="day" value="Wednesday">Wednesday</option>
+                                    <option name="day" value="Thursday">Thursday</option>
+                                    <option name="day" value="Friday">Friday</option>
+                                    <option name="day" value="Saturday">Saturday</option>
+                                    <option name="day" value="Sunday">Sunday</option>
+                                </select>
+                            </td>
+                            <td><input type="text" name="startHour" value=@row["starthour"] style="width:100%; border: 0"></td>
+                            <td><input type="text" name="endHour" value=@row["endhour"] style="width:100%; border: 0"></td>
+                            <td><input type="text" name="name" value=@row["name"] readonly style="width:100%; border: 0"> </td>
+                            <td><input type="text" name="volunteer_id" value=@row["volunteerID"] readonly style="width:100%; border: 0"></td>
+                            <td style="width:5%"><input type="checkbox" name="delete" value="@row["availableID"]" title="check to delete this available time" style="width:100%; border: 0"></td>
+                        </tr>
+                    }
+                }
+            }
+        </table>
+        <br>
+        <input type="submit" value="Update Availability" style="margin-bottom: 20px" />
+    </form>
+</div>
+
+
+
+
+
+
+
+

@@ -1,0 +1,154 @@
+﻿@page
+@model PetWalkSite.Pages.Index1Model
+@{
+}
+@using System.Data
+@using System.Data.SqlClient
+@{
+    DataTable petTable = new DataTable();
+    using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+    {
+        string searchQuery = "SELECT * " +
+                    "FROM pet ";
+        SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+        myConn.Open();
+        petTable.Load(displayCommand.ExecuteReader());
+        myConn.Close();
+    } // using
+}
+
+<h4>Appointment Search Portal</h4>
+
+@if (@Model.alertMessage != null)
+{
+    <script>alert("@Model.alertMessage");</script>
+}
+
+<div class="formItem">
+    <form method="post" asp-page-handler="FindAppointment">
+        <span class="infoText">select pet appointment</span>
+        <select name="search">
+            <option value="0" selected>-- Select --</option>
+            @foreach (DataRow row in petTable.Rows)
+            {
+                <option name="pet" value="@row["name"]">@row["name"]</option>
+            }
+        </select>
+        <input type="submit" value="Find Appointment" />
+    </form>
+</div>
+
+@{
+    DataTable table = new DataTable();
+    DataTable Availtable = new DataTable();
+    DataTable nameTable = new DataTable();
+    List<string> volNames = new List<string>();
+
+    if (@Model.petName != null)
+    {
+        using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+        {
+            string searchQuery = "SELECT * FROM appointment " +
+                        "JOIN pet " +
+                        "ON pet.petID = appointment.petID " +
+                        "JOIN volunteer " +
+                        "ON volunteer.volunteerID = appointment.volunteerID " +
+                        "WHERE pet.name = '" + @Model.petName + "'";
+            SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+            myConn.Open();
+            table.Load(displayCommand.ExecuteReader());
+            myConn.Close();
+        } // using
+          //  can be merged with last SQLcommand, but two same column name  is a problem, use anther SQL command temperary
+        @foreach (DataRow row in table.Rows)
+        {
+            @if ((int)@row["volunteerID"] != 0)
+            {
+                using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+                {
+                    string searchQuery = "SELECT name FROM volunteer WHERE volunteerID = " + @row["volunteerID"];
+                    SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+                    myConn.Open();
+                    SqlDataReader reader = displayCommand.ExecuteReader();
+                    reader.Read();
+                    volNames.Add((string)reader["name"]);
+                    myConn.Close();
+                } // using
+            }
+        }
+
+        // following SQL commands are prepared for avialable table display
+        using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+        {
+            string searchQuery = "SELECT name, starthour, endhour, day, AV.volunteerID FROM availability AS AV JOIN volunteer AS VT ON AV.volunteerID = VT.volunteerID ORDER BY name";
+            SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+            myConn.Open();
+            Availtable.Load(displayCommand.ExecuteReader());
+            myConn.Close();
+        } // using
+
+        using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+        {
+            string searchQuery = "SELECT name FROM availability AS AV JOIN volunteer AS VT ON AV.volunteerID = VT.volunteerID GROUP BY name";
+            SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+            myConn.Open();
+            nameTable.Load(displayCommand.ExecuteReader());
+            myConn.Close();
+        } // using
+    }
+}
+
+<div class="formItemTable">
+    <form method="post" asp-page-handler="ChangeDate">
+        <h5>Appointment Table</h5>
+        <table border="1" class="tableLayout">
+            <tr>
+                <th>Appointment ID</th>
+                <th>Pet Name</th>
+                <th>Date Booked</th>
+                <th>Appointment Date</th>
+                <th>Volunteer Name</th>
+                <th>Duration</th>
+                <th style="width:10%">Delete</th>
+            </tr>
+            @{
+                if (@Model.petName != null)
+                {
+                    int s = 0;
+                    @foreach (DataRow row in table.Rows)
+                    {
+                        <tr>
+                            <td>
+                                <select name="appointment_id" style="border: 0">
+                                    <option value="0" selected>-- Select --</option>
+                                    <option>@row["appointmentID"]</option>
+                                </select>
+                            </td>
+                            <td><input type="text" name="pet_name" value="@Model.petName" readonly style="width:100%; border: 0"></td>
+                            <td>
+                                @String.Format("{0:yyyy/MM/dd}",@row["dateBooked"])
+                                <input type="date" name="dateBooked" value="1900-01-01" style="width:100%; border: 0" /><br />
+                            </td>
+
+                            <td>
+                                @row["appointmentDate"]
+                                <select name="volTimeTable">
+                                    <option value="0" selected>-- Select --</option>
+                                    @foreach (DataRow rowAvail in Availtable.Rows)
+                                    {
+                                        <option>@rowAvail["starthour"] - @rowAvail["endhour"] @rowAvail["name"] @rowAvail["day"]</option>
+                                    }
+                                </select>
+                            </td>
+                            <td name="volunteerName">@volNames[s++]</td>
+                            <td>@row["duration"]</td>
+                            <td style="width:5%"><input type="checkbox" name="delete" value="@row["appointmentID"]" style="width:100%; border: 0"></td>
+                        </tr>
+                    }
+                }
+            }
+        </table>
+        <br>
+        <input type="submit" value="Change Date" style="margin-bottom: 20px" />
+    </form>
+</div>

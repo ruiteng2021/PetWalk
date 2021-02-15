@@ -1,0 +1,50 @@
+﻿@page
+@model PetWalkSite.Pages.clientSearchModel
+@{
+}
+@using System.Data
+@using System.Data.SqlClient
+
+@{
+    DataTable table = new DataTable();
+    using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+    {
+        string searchQuery = "SELECT * " +
+                    "FROM client ";                 
+        SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+        myConn.Open();
+        table.Load(displayCommand.ExecuteReader());
+        myConn.Close();
+    } // using
+}
+<h4>Client Search Portal</h4>
+@if (@Model.alertMessage != null)
+{
+    <script>alert("@Model.alertMessage");</script>
+}
+
+<div class="formItem">
+    <form method="post" asp-page-handler="ClientSearch">
+        <span class="infoText">select client</span>
+        <select name="search">
+            <option value="0" selected>-- Select --</option>
+            @foreach (DataRow row in table.Rows)
+            {
+                <option name="client" value="@row["name"]">@row["name"]</option>
+            }
+        </select>
+        <input type="submit" value="Find Client" />
+    </form>
+</div>
+
+
+<div class="formItem">
+    <form method="post" asp-page-handler="UpdateClient">
+        <input type="hidden" name="client_id" value="@Model.clientID" />
+        <input type="text" name="name" value="@Model.name" /><br />
+        <input type="text" name="phone" value="@Model.phone" /><br />
+        <input type="text" name="email" value="@Model.email" /><br />
+        <input type="text" name="address" value="@Model.address" /><br />
+        <input type="submit" value="Update" />
+    </form>
+</div>

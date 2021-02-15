@@ -1,0 +1,59 @@
+﻿@page
+@model PetWalkSite.Pages.CustomerAdminModel
+@{
+}
+@using System.Data
+@using System.Data.SqlClient
+
+@{
+    DataTable table = new DataTable();
+    using (SqlConnection myConn = new SqlConnection(Program.da.cs))
+    {
+        string searchQuery = "SELECT * FROM client";
+        SqlCommand displayCommand = new SqlCommand(searchQuery, myConn);
+        myConn.Open();
+
+        table.Load(displayCommand.ExecuteReader());
+
+    } // using
+}
+
+
+<h4>Customer Portal</h4>
+
+<div class="formItem">
+
+    <form method="post" asp-page-handler="AddClient">
+        <input required type="text" name="name" placeholder="enter name" /><br />
+        <input required type="tel" name="phone" placeholder="enter phone" /><br />
+        <input required type="email" name="email" placeholder="enter email" /><br />
+        <input required type="text" name="address" placeholder="enter address" /><br />
+
+        <input type="submit" value="Save" />
+    </form>
+</div>
+<div class="formItemTable">
+
+    <h5>Clients Summary</h5>
+    <table border="1" class="tableLayout">
+        <tr>
+            <th>Client ID</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Address</th>
+        </tr>
+        @foreach (DataRow row in table.Rows)
+        {
+            <tr>
+                <td>@row["clientID"]</td>
+                <td>@row["name"]</td>
+                <td>@row["phone"]</td>
+                <td>@row["email"]</td>
+                <td>@row["address"]</td>
+            </tr>
+        }
+    </table>
+
+</div>
+

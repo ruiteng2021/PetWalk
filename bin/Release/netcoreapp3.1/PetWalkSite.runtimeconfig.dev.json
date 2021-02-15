@@ -1,0 +1,8 @@
+{
+  "runtimeOptions": {
+    "additionalProbingPaths": [
+      "C:\\Users\\teng-laptop\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\teng-laptop\\.nuget\\packages"
+    ]
+  }
+}
